@@ -13,7 +13,7 @@ class Publisher (Node):
 
     def callback_func (self):
         msg = String()
-        msg.data = "Hello World!"
+        msg.data = input("Please enter a word: ")
 
         self.publisher.publish(msg)
         self.get_logger().info("Publishing: %s" % msg.data)
