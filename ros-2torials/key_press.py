@@ -29,7 +29,7 @@ class Pub(Node):
         if press == "s":
             point = Point(x=-1.0, y=0.0, z=0.0)
         if press == "d":
-            point = Point(x=0.0, y=-1.0, z=0.0)
+            point = Point(x=0.0, y=1.0, z=0.0)
         
         
         self.publisher_.publish(point)
