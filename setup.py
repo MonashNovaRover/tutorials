@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'ros-2torials'
+package_name = 'tutorials'
 
 setup(
     name=package_name,
