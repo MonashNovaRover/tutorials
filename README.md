@@ -1,4 +1,4 @@
-# tutorials
+# tutorials :information_source:
 This package is for learning ROS 2 and can be combined with the Nuclino documentation. :notebook:
 
 ### Script Conversion Task
