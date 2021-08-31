@@ -32,6 +32,7 @@ TODO:
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSHistoryPolicy, QoSReliabilityPolicy, QoSDurabilityPolicy, QoSLivelinessPolicy
 from std_msgs.msg import Empty
 
 #define constants
@@ -56,29 +57,21 @@ class HeartbeatMonitor(Node):
 
         #configure custom QoS profile for subscriber to handle timing issues and register
         #events when heartbeat not achieved
-        #set history to keep last so depth parameter is used (should be default)
-        #depth 1 as only need latest message
-        qos_profile = rclpy.qos.QoSProfile(history=rclpy.qos.QoSHistoryPolicy.KEEP_LAST,
-                depth=1)
+        #https://docs.ros.org/en/ros2_documentation/eloquent/Concepts/About-Quality-of-Service-Settings.html                    
+        qos_profile = \
+                rclpy.qos.QoSProfile(history=QoSHistoryPolicy.KEEP_LAST, #keep only last N samples
+                depth = 0, #No need to maintain history
+                reliability = QoSReliabilityPolicy.BEST_EFFORT, #will accept a reliable or best effort publisher
+                durability = QoSDurabilityPolicy.VOLATILE, #Do not need persistent samples (but will still accept if pub chooses)
+                liveliness = QoSLivelinessPolicy.AUTOMATIC, #Automatically detect liveliness change on lease duration exceeded
+                liveliness_lease_duration = BEAT_LOST_DURATION, #Max duration between individual messages before beat considered lost
+                deadline = BEAT_MISSED_DEADLINE #max duration before single beat considered missed
+                )
 
-        #use best effort to be flexible (allow pub to either be best effort or reliable)
-        #https://docs.ros.org/en/foxy/Concepts/About-Quality-of-Service-Settings.html#qos-policies
-        qos_profile.reliability = rclpy.qos.QoSReliabilityPolicy.BEST_EFFORT
-
-        #Samples should not be persistent
-        #N.B. if publisher chooses to make them consistent then this is still allowed
-        qos_profile.durability = rclpy.qos.QoSDurabilityPolicy.VOLATILE
-
-        #automatic liveliness detection so automatically detect when lease duration exceeded
-        qos_profile.liveliness = rclpy.qos.QoSLivelinessPolicy.AUTOMATIC
         #N.B. for QoS compatability a publisher must promise a QoS with
-        #lease duration shorter than the lease expected here
-        qos_profile.liveliness_lease_duration = BEAT_LOST_DURATION
-
-        #set deadline for each beat. if deadline not met log warning
+        #lease duration shorter than the lease expected in QoSProfile
         #N.B. that for QoS compatability a publisher must promise a QoS
-        #with deadline shorter than the deadline expected in this subscriber
-        qos_profile.deadline = BEAT_MISSED_DEADLINE
+        #with deadline shorter than the deadline expected in this QoSProfile
         
         #create event callbacks to be triggerred on deadline missed
         #and lease duration execeeded (liveliness lost)
