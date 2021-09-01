@@ -40,12 +40,17 @@ class HeartbeatSub(Node):
         # ROS initialisation
         super().__init__('HeartbeatSub')
         self.subscription = self.create_subscription(Empty, 'base/heartbeat', self.callback_func, 10)
+
+        y_parameter_descriptor = ParameterDescriptor(description='Rover Heartbeat Parameter')
+
+        # Declare Parameter
+        self.declare_parameter('/rover/heartbeat')
  
         # Create timer to run checkheartbeat frequently
         self.timer = self.create_timer(0.1, self.check_heartbeat)
 
     # Called when received heartbeat information
-    def received_cb (self, data):
+    def callback_func (self, data):
         self.heartbeat()
         self.beat_count = 0
 
@@ -55,16 +60,19 @@ class HeartbeatSub(Node):
         else:
             self.no_heartbeat()
 
+        # Set parameter
+        self.set_parameters([Parameter('/rover/heartbeat', Parameter.Type.BOOL, self.beat_count <= TIME_OUT)])
+
 
     # When heartbeat times out
     def no_heartbeat (self):
-	self.beat = False
+        self.beat = False
         print("\033[1;31;48mNo Heartbeart Detected\033[0;0m")
 
 
     # When heartbeat returns
     def heartbeat (self):
-	if not self.beat:
-	    print("\033[1;31;44mHeartbeat Returned\033[0;0m")
-	self.beat = True
+        if not self.beat:
+            print("\033[1;31;44mHeartbeat Returned\033[0;0m")
+        self.beat = True
 
