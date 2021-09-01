@@ -12,20 +12,21 @@ to an appropriate service to halt the rover and indicate loss visually (i.e. LED
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 NODE: heartbeat_monitor
 TOPICS:
-  - None
+  - subscribes to /control/heartbeat with msg Empty
 SERVICES:
-  - None
+  - calls 'rover_emergency_client' 
 ACTIONS: 
   - None
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 PACKAGE: 	tutorials
 AUTHOR(S):	Josh Cherubino
 CREATION:	31/08/21
-EDITED:		31/08/21
+EDITED:		01/09/21
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 TODO:
     - tune BEAT_MISSED_DEADLINE and BEAT_LOST_DURATION values
-    - Instantiate and call client once node has been created
+    - Instantiate and call emergency client once node has been created.
+    - Update docstring to match correct client name
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
 
@@ -75,8 +76,6 @@ class HeartbeatMonitor(Node):
         
         #create event callbacks to be triggerred on deadline missed
         #and lease duration execeeded (liveliness lost)
-        #this isn't documented for some reason.
-        #see source https://github.com/ros2/rclpy/blob/98707238ad2564e28cbc987fc3a31ed9a1c86243/rclpy/rclpy/qos_event.py
         subscription_event_callbacks = \
                 rclpy.qos_event.SubscriptionEventCallbacks(deadline=self.beat_missed,
                 liveliness=self.check_beat_lost)
@@ -86,15 +85,14 @@ class HeartbeatMonitor(Node):
                 self.beat_received, qos_profile, event_callbacks=subscription_event_callbacks)
 
         #flag to track if we have the heart beat.
-        #Assume no heartbeat initially
-        self.beat = False
-        #flag to track if we have halted the rover previously
-        self.halted = True
-
-        #create client instance here
-        
-        #and initially halt rover until we confirm we can receive a heartbeat
-
+        #define possible node states
+        self.BEAT_OK = 0
+        self.BEAT_MISSED = 1
+        self.BEAT_LOST = 2
+        #Assume beat lost initially
+        self.state = self.BEAT_LOST
+        #TODO: create client instance here
+        #TODO: initially halt rover until we confirm we can receive a heartbeat
         self.get_logger().info('Heartbeat monitor started')
 
     def beat_received(self, msg: Empty) -> None:
@@ -106,15 +104,15 @@ class HeartbeatMonitor(Node):
         """
         #if heartbeat just re-gained, log that it has been detected
         #otherwise do nothing
-        if not self.beat:
+        if self.state != self.BEAT_OK:
             self.get_logger().info('Heartbeat detected')
-            self.beat = True
-            #heart-beat regained
-            if self.halted:
+            #check if heart-beat just regained
+            if self.state == self.BEAT_LOST:
                 #call client to resume rover actions
                 #self.rover_emergency_client.call_async(Msg(RESUME))
                 self.get_logger().info('Resuming rover')
-                self.halted = False
+            #update state
+            self.state = self.BEAT_OK
 
     def beat_missed(self, info: rclpy.qos_event.QoSRequestedDeadlineMissedInfo) -> None:
         """
@@ -122,11 +120,10 @@ class HeartbeatMonitor(Node):
         Sets heartbeat as lost and logs warning
         :param info: Information about the requested deadline miss
         """
-        #only log missed beat (to avoid spam where heartbeat completely lost) when 
-        #it was previously not lost
-        if self.beat:
+        #log missed beats when heart beat just missed or previously missed
+        if self.state == self.BEAT_OK:
             self.get_logger().warn('Heartbeat missed. Total misses: {}'.format(info.total_count))
-            self.beat = False
+            self.state = self.BEAT_MISSED
 
     def check_beat_lost(self, info: rclpy.qos_event.QoSLivelinessChangedInfo) -> None:
         """
@@ -141,8 +138,7 @@ class HeartbeatMonitor(Node):
             #call appropriate service to halt rovers motion here
             #i.e. self.future = self.rover_emergency_client.call_async(Msg(HALT))
             #set state to halted so we can resume when beat re-acquired
-            self.halted = True
-            self.beat = False
+            self.state = self.BEAT_LOST
             self.get_logger().error('Heartbeat lost. Halting rover')
 
 def main(args=None):
