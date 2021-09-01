@@ -36,17 +36,24 @@ class HeartbeatSub(Node):
     # The initialisation function
     def __init__ (self):
         print("Initialising Heartbeat Subscriber class.")
-        super().__init__('HeartbeatSub')
-        self.subscription = self.create_subscription(String, 'topic', self.callback_func, 10)
-        self.subscription  # prevent unused variable warning
 
-        # Run the check node for seeing if heartbeat exists
-        self.check_heartbeat()
+        # ROS initialisation
+        super().__init__('HeartbeatSub')
+        self.subscription = self.create_subscription(Empty, 'base/heartbeat', self.callback_func, 10)
+ 
+        # Create timer to run checkheartbeat frequently
+        self.timer = self.create_timer(0.1, self.check_heartbeat)
 
     # Called when received heartbeat information
     def received_cb (self, data):
         self.heartbeat()
         self.beat_count = 0
+
+    def check_heartbeat(self):
+        if self.beat_count <= TIME_OUT:
+            self.beat_count += 1
+        else:
+            self.no_heartbeat()
 
 
     # When heartbeat times out
