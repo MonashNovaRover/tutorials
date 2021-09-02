@@ -64,7 +64,7 @@ class HeartbeatSubscriber(Node):
         Called when the timeout has been exceeded without receiving any heartbeat messages
         """
         self.hb_detected = False
-        print("\033[1;31;48mNo Heartbeart Detected\033[0;0m")
+        print("\033[1;31;48mBoop Brrtz :(\033[0;0m")
 
     def heartbeat(self):
         """
@@ -72,7 +72,7 @@ class HeartbeatSubscriber(Node):
         """
         if self.hb_detected == False: 
             #if heartbeat was lost previously but is found again
-            print("\033[1;31;44mHeartbeat Returned\033[0;0m")
+            print("\033[1;31;44mBeep Boop\033[0;0m")
         self.hb_detected = True
         self.timeout_count = 0
 
