@@ -21,87 +21,66 @@ TODO:
  - Have a Sunny day outside
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-
-
-
-
-
-
-Not done yet!!
-
-
 """
-
-
-
-
-
-
-
 
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Empty
 
-class HeartbeatSub:
-    # Stores whether or not a beat has been found
-    beat = False
-    beat_count = 0
-
-    # The time out and loop counts
-    LOOP_HERTZ = 50
-    TIME_OUT = 25
-
-    # The initialisation function
-    def __init__ (self):
+class HeartbeatSubscriber(Node):
+    def __init__(self):
+        super().__init__("heartbeat_sub")
         print("Initialising Heartbeat Subscriber class.")
+        self.subscription = self.create_subscription(Empty, "/tutorials/heartbeat", self.heartbeat_cb, 10)
+        # Stores whether or not a beat has been found
+        self.hb_detected = False
+        self.timeout_count = 0
 
-        # Set up the ROS params
-        rospy.init_node('heartbeat_sub', anonymous=True)
-        rospy.Subscriber("/base/heartbeat", Empty, self.received_cb)
+        # The time out and loop count constants
+        self.LOOP_HERTZ = 50
+        self.TIMEOUT = 25
+        self.timer = self.create_timer(1/self.LOOP_HERTZ, self.increment_count)
 
-        # Run the check node for seeing if heartbeat exists
-        self.check_heartbeat()
-
-    # Called when received heartbeat information
-    def received_cb (self, data):
+    def heartbeat_cb(self, msg):
+        """ 
+        Called when receives a message from the /tutorials/heartbeat topic
+        """
         self.heartbeat()
-        self.beat_count = 0
+        self.timeout_count = 0
 
-    # Checks the heartbeat on the loop
-    def check_heartbeat (self):
-        rate = rospy.Rate(self.LOOP_HERTZ) # 10hz
+    def increment_count(self):
+        """
+        Called based on the timer, LOOP_HERTZ times a second
+        Increments the timeout counter
+        """
+        if self.timeout_count == self.TIMEOUT:
+            #only prints once when heartbeat is lost
+            #can change if you prefer the spam
+            self.no_heartbeat()
+        self.timeout_count +=1
 
-        # Call the first heartbeat for the LED controller
-        self.heartbeat()
-
-        # While still running ROS
-        while not rospy.is_shutdown():
-            # If the beat count exceeds the time out
-            if self.beat_count > self.TIME_OUT:
-                self.no_heartbeat()
-
-            # Otherwise increase beat count
-            else:
-                self.beat_count += 1
-
-            # Set the ROS param for the heartbeat
-            rospy.set_param("/rover/heartbeat", self.beat_count <= self.TIME_OUT)
-
-            rate.sleep()
-
-    # When heartbeat times out
-    def no_heartbeat (self):
-	self.beat = False
+    def no_heartbeat(self):
+        """
+        Called when the timeout has been exceeded without receiving any heartbeat messages
+        """
+        self.hb_detected = False
         print("\033[1;31;48mNo Heartbeart Detected\033[0;0m")
 
-    # When heartbeat returns
-    def heartbeat (self):
-	if not self.beat:
-	    print("\033[1;31;44mHeartbeat Returned\033[0;0m")
-	self.beat = True
+    def heartbeat(self):
+        """
+        Called when a heartbeat message is received
+        """
+        if self.hb_detected == False: 
+            #if heartbeat was lost previously but is found again
+            print("\033[1;31;44mHeartbeat Returned\033[0;0m")
+        self.hb_detected = True
+        self.timeout_count = 0
 
-# The main function when run
+def main():
+    rclpy.init()
+    hb_subscriber = HeartbeatSubscriber()
+    
+    rclpy.spin(hb_subscriber)
+
 if __name__ == "__main__":
-    sub = HeartbeatSub()
+    main()
