@@ -4,7 +4,7 @@ NOVA ROVER TEAM
 This node listens to heartbeat from base and performs actions if not received
 
 Author: Marcel Masque
-Last Modified: 22/03/2021 by Marcel Masque
+Last Modified: 5/09/2021 by Marcel Masque
 '''
 
 import rclpy
