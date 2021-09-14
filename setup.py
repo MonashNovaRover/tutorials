@@ -20,6 +20,10 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'publisher = tutorials.example_publisher:main',
+            'subscriber = tutorials.example_subscriber:main',
+            'client = tutorials.example_client:main',
+            'service = tutorials.example_service:main',
         ],
     },
 )
