@@ -21,6 +21,7 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
+find_package(core REQUIRED)
 
 # Include the core package
 find_package(core REQUIRED)
@@ -48,6 +49,18 @@ install(PROGRAMS
   tutorials/example_subscriber.py
   tutorials/example_client.py
   tutorials/example_service.py
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+add_executable(drive_pub src/drive_pub.cpp)
+ament_target_dependencies(drive_pub rclcpp core)
+
+add_executable(drive_sub src/drive_sub.cpp)
+ament_target_dependencies(drive_sub rclcpp core)
+
+install(TARGETS
+  drive_pub
+  drive_sub
   DESTINATION lib/${PROJECT_NAME}
 )
 
