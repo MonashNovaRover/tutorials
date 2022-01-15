@@ -9,7 +9,7 @@ class DrivePublisher : public rclcpp::Node {
   private:
     rclcpp::TimerBase::SharedPtr timer;
     rclcpp::Publisher<core::msg::DriveVel>::SharedPtr publisher;
-    rclcpp::QoS qos = rclcpp::QoS(5).reliability(RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT).durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL).deadline(100ms);
+    rclcpp::QoS qos = rclcpp::QoS(1).reliability(RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT).durability(RMW_QOS_POLICY_DURABILITY_VOLATILE).deadline(200ms);
     rclcpp::PublisherOptions publisher_options;
 
   private:
