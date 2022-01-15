@@ -47,7 +47,7 @@ def main (args = None):
             try:
                 response = client.future.result()
             # Handle the error if missing data
-            except Exeception as e:
+            except Exception as e:
                 client.get_logger().info("Service call failed %r" % (e,))
             # If success
             else:
