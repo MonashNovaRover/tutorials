@@ -10,11 +10,16 @@ class DancingRobot(Node):
 
         self.publisher = self.create_publisher(DriveInput, '/control/drive_inputs', 10)
         self.timer = self.create_timer(1, self.callback_func)
+        self.go_forward = True
     
 
     def callback_func(self):
-        # Publish some driver input here.
-        pass
+        if self.go_forward:
+            self.publisher.publish(DriveInput(speed=0.5, steer=0))
+        else:
+            self.publisher.publish(DriveInput(speed=-0.5, steer=0))
+        
+        self.go_forward = not self.go_forward
 
 
 def main(args = None):
