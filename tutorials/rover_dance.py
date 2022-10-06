@@ -3,12 +3,20 @@
 import rclpy
 from rclpy.node import Node
 from core.msg import DriveInput
+from rclpy.duration import Duration
+from rclpy.qos import QoSProfile QoSReliabilityProfile
 
 class DancingRobot(Node):
     def __init__(self):
+        qos = QoSProfile(
+                reliability=QoSReliabilityProfile.BEST_EFFORT,
+                depth=1,
+                deadline=Duration(nanoseconds=2e8)
+            )
+
         super().__init__("do_the_robot")
 
-        self.publisher = self.create_publisher(DriveInput, '/control/drive_inputs', 10)
+        self.publisher = self.create_publisher(DriveInput, '/control/drive_inputs', qos)
         self.timer = self.create_timer(1, self.callback_func)
         self.go_forward = True
     
