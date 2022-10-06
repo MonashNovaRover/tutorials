@@ -48,6 +48,7 @@ install(PROGRAMS
   tutorials/example_subscriber.py
   tutorials/example_client.py
   tutorials/example_service.py
+  tutorials/rover_dance.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
